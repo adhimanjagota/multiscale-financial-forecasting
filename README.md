@@ -2,40 +2,30 @@
 
 **A reproducible applied mathematics / machine learning research prototype** investigating whether rolling empirical-mode-decomposition features help forecast next-day SPY ETF log returns beyond simple statistical and ML baselines.
 
-**Status:** baseline and optional EMD/CEEMDAN experimental pipeline implemented, with sample-alignment fixes and tests. The operator ran the experiments on historical SPY market data on October 13, 2026; see **[preliminary real-market results](docs/RESULTS.md)**. Runs were separately downloaded and not yet independently reproduced against a frozen dataset. This is not an investment strategy, proof of profitability, or a reproduction of the cited study.
 
-## Preliminary results (real SPY historical data)
+**Status:** Implemented and tested a Python forecasting pipeline with historical-mean, Ridge, gradient-boosting, EMD, and CEEMDAN models. Completed a controlled experiment using one frozen SPY dataset, with matching dataset fingerprints and test targets across three runs. See [verified experimental results](docs/RESULTS.md). This remains a preliminary research prototype, not a validated investment strategy or an exact reproduction of the cited study.
 
-In three operator-reported experiment runs, the historical-mean benchmark achieved **RMSE 0.010868** across **1,197 test predictions**, lower than Ridge, gradient boosting, and the tested EMD/CEEMDAN-augmented variants. The added decomposition features did **not** demonstrate a convincing advantage in this preliminary evaluation.
+## Frozen-data results (SPY, October 2026)
 
-**[Read the full three-run results, metrics, and reproducibility cautions →](docs/RESULTS.md)**
+We evaluated Ridge regression, gradient boosting, and trailing-window EMD/CEEMDAN variants on the **same frozen SPY adjusted-price series**: 4,219 closing prices and 1,197 matching test predictions.
 
-The runs had small differences in the gradient-boosting baseline; do not treat them as fully controlled comparisons until rerun using one frozen adjusted-close dataset.
+The historical-mean benchmark achieved the lowest test RMSE (**0.010868**). No decomposition variant convincingly outperformed it.
 
+These results represent a preliminary fixed-window forecasting evaluation, **not evidence of trading profitability**.
 
-## Experiment Visualizations
+### Model performance comparison
 
-### 1. Forecasting Model Comparison
+![Frozen-data RMSE comparison](figures/frozen_rmse_comparison.png)
 
-![Model RMSE Comparison](figures/rmse_comparison.png)
+### Actual vs. predicted returns
 
-This figure compares out-of-sample RMSE across historical-mean, Ridge, gradient-boosting, EMD, and CEEMDAN forecasting models. Lower RMSE indicates better predictive performance.
+![Actual vs predicted returns](figures/frozen_actual_vs_predictions.png)
 
-### 2. Actual vs. Predicted SPY Returns
+### Cumulative forecasting error
 
-![Actual vs Predicted Returns](figures/actual_vs_predictions_ceemdan.png)
+![Cumulative error differences](figures/frozen_cumulative_error_difference.png)
 
-Comparison of observed SPY next-day log returns against model predictions over the final 160 observations in the CEEMDAN experiment.
-
-### 3. Cumulative Forecast Error
-
-![Cumulative Forecast Error](figures/cumulative_error_difference.png)
-
-Cumulative differences in squared prediction errors relative to the historical-mean benchmark. Values above zero indicate greater cumulative error than the benchmark.
-
-**Research finding:** The historical-mean benchmark achieved the lowest overall RMSE in these preliminary experiments. Adding EMD and CEEMDAN features did not demonstrate a convincing improvement.
-
-**Limitation:** These experiments used separate SPY downloads with slightly different dataset fingerprints. The results are preliminary until all models are rerun on an identical frozen dataset.
+See [full metrics, dataset audit, interpretation, and limitations](docs/RESULTS.md).
 
 ## Research question
 
