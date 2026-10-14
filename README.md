@@ -12,6 +12,31 @@ In three operator-reported experiment runs, the historical-mean benchmark achiev
 
 The runs had small differences in the gradient-boosting baseline; do not treat them as fully controlled comparisons until rerun using one frozen adjusted-close dataset.
 
+
+## Experiment Visualizations
+
+### 1. Forecasting Model Comparison
+
+![Model RMSE Comparison](figures/rmse_comparison.png)
+
+This figure compares out-of-sample RMSE across historical-mean, Ridge, gradient-boosting, EMD, and CEEMDAN forecasting models. Lower RMSE indicates better predictive performance.
+
+### 2. Actual vs. Predicted SPY Returns
+
+![Actual vs Predicted Returns](figures/actual_vs_predictions_ceemdan.png)
+
+Comparison of observed SPY next-day log returns against model predictions over the final 160 observations in the CEEMDAN experiment.
+
+### 3. Cumulative Forecast Error
+
+![Cumulative Forecast Error](figures/cumulative_error_difference.png)
+
+Cumulative differences in squared prediction errors relative to the historical-mean benchmark. Values above zero indicate greater cumulative error than the benchmark.
+
+**Research finding:** The historical-mean benchmark achieved the lowest overall RMSE in these preliminary experiments. Adding EMD and CEEMDAN features did not demonstrate a convincing improvement.
+
+**Limitation:** These experiments used separate SPY downloads with slightly different dataset fingerprints. The results are preliminary until all models are rerun on an identical frozen dataset.
+
 ## Research question
 
 Do features from **trailing-window EMD or CEEMDAN**, computed at each date using *only prices observable on that date*, improve next-day return forecasts over conventional lag, momentum, and realized-volatility features?
