@@ -2,7 +2,15 @@
 
 **A reproducible applied mathematics / machine learning research prototype** investigating whether rolling empirical-mode-decomposition features help forecast next-day SPY ETF log returns beyond simple statistical and ML baselines.
 
-**Status:** baseline and optional EMD/CEEMDAN experimental pipeline implemented, with sample-alignment fixes and tests. **Live SPY results are *not* included**: this build environment lacked outbound market-data access. Run the instructions below on an internet-connected computer (or supply a historical price CSV) to produce genuine market results. This is not an investment strategy, proof of profitability, or claimed reproduction of the cited study.
+**Status:** baseline and optional EMD/CEEMDAN experimental pipeline implemented, with sample-alignment fixes and tests. The operator ran the experiments on historical SPY market data on October 13, 2026; see **[preliminary real-market results](docs/RESULTS.md)**. Runs were separately downloaded and not yet independently reproduced against a frozen dataset. This is not an investment strategy, proof of profitability, or a reproduction of the cited study.
+
+## Preliminary results (real SPY historical data)
+
+In three operator-reported experiment runs, the historical-mean benchmark achieved **RMSE 0.010868** across **1,197 test predictions**, lower than Ridge, gradient boosting, and the tested EMD/CEEMDAN-augmented variants. The added decomposition features did **not** demonstrate a convincing advantage in this preliminary evaluation.
+
+**[Read the full three-run results, metrics, and reproducibility cautions →](docs/RESULTS.md)**
+
+The runs had small differences in the gradient-boosting baseline; do not treat them as fully controlled comparisons until rerun using one frozen adjusted-close dataset.
 
 ## Research question
 
@@ -95,7 +103,7 @@ Use a completed past-tense claim only for activities you have actually performed
 
 ## Reproducibility
 
-Suggested environment: Python 3.11. Install dependencies from `requirements.txt`; the ranges are given, not a fully pinned lockfile. Commit your market evaluation scripts and summary outputs after personal verification. Never commit raw provider data in violation of terms.
+Suggested environment: Python 3.11. Install dependencies from `requirements.txt`; the ranges are given, not a fully pinned lockfile. The operator-reported October 2026 summary is included in `docs/RESULTS.md`. Commit further market results only after checking metadata and verifying the price snapshot. Never commit raw provider data in violation of terms.
 
 ### v0.2 experiment audit (October 2026)
 
