@@ -50,7 +50,7 @@ def build_folds(close, features, first_test_year=2022, min_train=252):
 
 
 def run_walk_forward(close, output, first_test_year=2022, emd='none', emd_window=80,
-                     ceemdan_trials=12, min_train=252):
+                    ceemdan_trials=12, min_train=252, seed=42):
     if emd not in ('none', 'emd', 'ceemdan'):
         raise ValueError('emd must be none, emd or ceemdan')
     if emd_window < 20 or min_train < 2 or (emd == 'ceemdan' and ceemdan_trials < 1):
@@ -61,8 +61,13 @@ def run_walk_forward(close, output, first_test_year=2022, emd='none', emd_window
     features = make_features(close)
     features = features.loc[features.index >= close.index[emd_window - 1]].copy()
     if emd != 'none':
-        extra = rolling_emd_features(close, features.index, window=emd_window,
-                                      trials=ceemdan_trials if emd == 'ceemdan' else 0)
+        extra = rolling_emd_features(
+            close,
+            features.index,
+            window=emd_window,
+            trials=ceemdan_trials if emd == 'ceemdan' else 0,
+            seed=seed,
+        )
         features = features.join(extra).dropna()
     # All modes should have identical feature dates; decomposition must produce finite columns.
     columns = {'HistoricalMean': [], 'Ridge_Baseline': BASE_COLS,
@@ -116,7 +121,10 @@ def run_walk_forward(close, output, first_test_year=2022, emd='none', emd_window
                 'last_price_date': str(close.index.max().date()),
                 'first_test_year': first_test_year, 'method': 'expanding training, annual retraining',
                 'training_target_rule': 'next observed close must predate first test feature date',
-                'emd': emd, 'emd_window': emd_window, 'ceemdan_trials': ceemdan_trials,
+                'emd': emd,
+                'emd_window': emd_window,
+                'ceemdan_trials': ceemdan_trials,
+                'ceemdan_seed': seed if emd == 'ceemdan' else None,
                 'folds': fold_descriptions,
                 'limitations': 'No independent tuning/validation, no financial backtest, no uncertainty test.'}
     (output / 'run_metadata.json').write_text(json.dumps(metadata, indent=2))
@@ -137,11 +145,25 @@ def main():
     parser.add_argument('--emd', choices=['none', 'emd', 'ceemdan'], default='none')
     parser.add_argument('--emd-window', type=int, default=80)
     parser.add_argument('--ceemdan-trials', type=int, default=12)
+    parser.add_argument(
+        '--seed',
+        type=int,
+        default=42,
+        help='Random seed for CEEMDAN noise generation',
+    )
     parser.add_argument('--min-train', type=int, default=252)
     args = parser.parse_args()
     close = load_csv(args.csv) if args.csv else download_spy(args.start, args.end)
-    run_walk_forward(close, args.output, args.first_test_year, args.emd,
-                     args.emd_window, args.ceemdan_trials, args.min_train)
+    run_walk_forward(
+        close,
+        args.output,
+        args.first_test_year,
+        args.emd,
+        args.emd_window,
+        args.ceemdan_trials,
+        args.min_train,
+        args.seed,
+    )
 
 if __name__ == '__main__':
     main()

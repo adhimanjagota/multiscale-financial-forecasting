@@ -45,6 +45,16 @@ Paired squared-error comparisons on **1,197 walk-forward predictions** used HAC 
 
 See [statistical analysis, corrected p-values, and limitations](docs/STATISTICAL_RESULTS.md).
 
+## CEEMDAN random-seed stability (October 2026)
+
+Using one frozen SPY dataset and identical annual walk-forward folds, we repeated CEEMDAN-augmented Ridge and gradient-boosting experiments with six noise seeds (11, 22, 33, 42, 44, 55). A second seed-11 run reproduced **all 1,197 predictions exactly** in the tested environment. Across seeds, Ridge forecasts were comparatively stable, while gradient-boosting forecasts showed greater seed-dependent variability. No seed beat the historical-mean RMSE. These are exploratory findings, not a statistical stability guarantee.
+
+![CEEMDAN RMSE variability](figures/seed_rmse_variability.png)
+
+![Change in RMSE vs. non-decomposition models](figures/seed_relative_rmse.png)
+
+See [the six-seed results, exact metrics, audit, and limitations](docs/SEED_STABILITY.md).
+
 ## Research question
 
 Do features from **trailing-window EMD or CEEMDAN**, computed at each date using *only prices observable on that date*, improve next-day return forecasts over conventional lag, momentum, and realized-volatility features?

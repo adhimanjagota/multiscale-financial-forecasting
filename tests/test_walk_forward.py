@@ -52,11 +52,51 @@ def test_mode_alignment(tmp_path, monkeypatch):
     import src.walk_forward as wf
     from src.experiment import EMD_COLS
     prices = sample_prices()
-    def fake_emd(close, index, window, trials):
-        return pd.DataFrame({col: np.zeros(len(index)) for col in EMD_COLS}, index=index)
+    def fake_emd(close, index, window, trials, seed=42):
+        return pd.DataFrame(
+            {col: np.zeros(len(index)) for col in EMD_COLS},
+            index=index,
+        )
     monkeypatch.setattr(wf, 'rolling_emd_features', fake_emd)
     a, _, p_a = run_walk_forward(prices, tmp_path/'a', first_test_year=2024)
     b, _, p_b = run_walk_forward(prices, tmp_path/'b', first_test_year=2024, emd='emd')
     for name in ('HistoricalMean', 'Ridge_Baseline', 'GradientBoosting_Baseline'):
         np.testing.assert_array_equal(p_a[name], p_b[name])
     np.testing.assert_array_equal(p_a.actual_next_day_log_return, p_b.actual_next_day_log_return)
+
+
+def test_ceemdan_seed_forwarding(tmp_path, monkeypatch):
+    import json
+    import numpy as np
+    import pandas as pd
+    import src.walk_forward as wf
+    from src.experiment import EMD_COLS
+
+    prices = sample_prices()
+    received = []
+
+    def fake_emd(close, index, window, trials, seed=42):
+        received.append((trials, seed))
+        return pd.DataFrame(
+            {col: np.zeros(len(index)) for col in EMD_COLS},
+            index=index,
+        )
+
+    monkeypatch.setattr(wf, "rolling_emd_features", fake_emd)
+
+    wf.run_walk_forward(
+        prices,
+        tmp_path / "seed11",
+        first_test_year=2024,
+        emd="ceemdan",
+        ceemdan_trials=3,
+        seed=11,
+    )
+
+    assert received == [(3, 11)]
+
+    metadata = json.loads(
+        (tmp_path / "seed11" / "run_metadata.json").read_text()
+    )
+    assert metadata["ceemdan_seed"] == 11
+
