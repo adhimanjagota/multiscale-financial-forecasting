@@ -3,7 +3,7 @@
 **A reproducible applied mathematics / machine learning research prototype** investigating whether rolling empirical-mode-decomposition features help forecast next-day SPY ETF log returns beyond simple statistical and ML baselines.
 
 
-**Status:** Implemented and tested a Python forecasting pipeline with historical-mean, Ridge, gradient-boosting, EMD, and CEEMDAN models. Completed a controlled experiment using one frozen SPY dataset, with matching dataset fingerprints and test targets across three runs. See [verified experimental results](docs/RESULTS.md). This remains a preliminary research prototype, not a validated investment strategy or an exact reproduction of the cited study.
+**Status (October 2026):** Completed a fixed-window benchmark and five-fold annual expanding-window walk-forward evaluation of seven SPY next-day return forecasting configurations, including rolling EMD and CEEMDAN features. Audited dataset fingerprints and aligned targets, ran paired HAC loss comparisons with multiple-testing correction, and assessed CEEMDAN seed sensitivity across six seeds with an exact same-seed repeatability check. **18 automated tests pass** in the verified local environment. This is an independent research prototype—not an exact reproduction of the cited paper, a verified trading strategy, or evidence of profitability.
 
 ## Frozen-data results (SPY, October 2026)
 
@@ -108,48 +108,70 @@ The CSV should contain observations from 2010 through the test period. The repos
 
 ## Experiment design
 
-- **Target:** next-day log return `log(Close[t+1]/Close[t])`.
-- **Data:** SPY adjusted daily closing prices; 2010 onward by default.
-- **Training:** through 2018-12-31.
-- **Validation:** 2019-01-01 through 2021-12-31.
-- **Test:** 2022-01-01 onward (through date of data download).
-- **Controls:** lagged daily returns, rolling means, rolling volatility, five-day momentum.
-- **Models:** historical-mean return, standardized Ridge regression, histogram gradient boosting.
-- **Decomposition models:** same two ML models with additional *past-only* rolling-EMD features; aligned sampling for fair comparisons. All modes, including `none`, discard the same initial warmup interval to align baseline training samples.
-- **Metrics:** test RMSE, MAE, and sign accuracy. No claim of trading performance.
-- **Hyperparameters:** fixed illustrative values; not optimized on test. The current code combines the training and validation periods for its final fit; therefore validation is **not** an independent evaluation holdout. Hyperparameters are fixed for demonstration purposes.
+- **Target:** next-observation SPY adjusted-close log return, `log(Close[t+1]/Close[t])`.
+- **Frozen input:** 4,219 adjusted daily SPY closes from January 4, 2010 through October 12, 2026; the downloaded provider data remain local rather than committed to GitHub.
+- **Feature construction:** lagged returns, rolling statistics, volatility, momentum, and (optionally) four exploratory terminal-IMF summaries from trailing 80-close EMD or CEEMDAN decompositions. Features at date `t` use prices no later than `t`.
+- **Forecasting models:** historical-mean return, standardized Ridge, histogram gradient boosting, and the Ridge/boosting variants augmented with EMD or CEEMDAN features (seven configurations total).
+- **Original fixed-window study:** training through 2018, an additional 2019–2021 period included in the final fit, and test dates from 2022 onward. The 2019–2021 period was **not** an independent holdout for the reported final fit. See [fixed-window results](docs/RESULTS.md).
+- **Walk-forward study:** expanding training history with a refit at the beginning of each test calendar year (2022, 2023, 2024, 2025, and partial 2026). For each fold, training labels are observed before the first test feature date; 1,197 test observations align across models. See [walk-forward methods and results](docs/WALK_FORWARD_RESULTS.md).
+- **Evaluation:** RMSE, MAE, and directional accuracy; paired squared-error loss comparisons use HAC/Newey–West standard errors and Holm correction. See [statistical results](docs/STATISTICAL_RESULTS.md).
+- **Randomness audit:** CEEMDAN seeds `11, 22, 33, 42, 44, 55`, with a repeat run of seed 11. Baseline predictions, dates, targets, and frozen input match; seed 11's 1,197 forecasts repeated exactly in the tested environment. The original seed-42 run used the previous implicit default. See [seed-stability audit](docs/SEED_STABILITY.md).
+- **Parameter selection:** fixed illustrative model settings; no independently tuned nested validation, trading-cost analysis, or economic profitability claims.
 
-### Important limitations / roadmap
+### Reproduce the walk-forward workflow
 
-1. The first run uses a **single fixed test window**; a credible scientific comparison needs multi-fold purged/embargoed or walk-forward evaluation (and parameter tuning entirely within each training period).
-2. EMD/CEEMDAN decompositions have **mode-mixing and inconsistent IMF count/order** across rolling windows. Terminal coefficients here are *exploratory*, not stable physically defined frequency bands.
-3. The current experiment does not implement the paper's full HHT instantaneous amplitude/frequency features, SVM, or LSTM. Its results **must not** be represented as a replication of published results.
-4. Direction accuracy is not a portfolio-return measure. Transaction costs, trading constraints, risk, and significance testing are out of scope.
-5. Data adjustments, source limitations, and decisions about price-vs-return decomposition affect interpretation and need explicit sensitivity checks.
-6. A higher score on a single evaluation period does not establish robust predictive ability.
+Prepare a **local** adjusted-price CSV with columns `Date,Close` (the data snapshot is not included in the repository), then run:
+
+```bash
+python -m pip install -r requirements.txt
+python -m pytest -q
+python -m src.walk_forward --csv data/spy_adjusted_frozen.csv --output results/walk_forward_baseline
+python -m src.walk_forward --csv data/spy_adjusted_frozen.csv --emd emd --output results/walk_forward_emd
+python -m src.walk_forward --csv data/spy_adjusted_frozen.csv --emd ceemdan --seed 11 --output results/walk_forward_ceemdan_seed11
+```
+
+CEEMDAN is considerably slower than the other runs. The local CSV should use the same adjusted-price snapshot for meaningful comparisons; fetching today's live prices will not necessarily reproduce the October 2026 results. The analysis outputs include metrics, predictions, and metadata, including the dataset fingerprint.
+
+### Limitations and future work
+
+1. **No verified trading edge:** forecast RMSE, MAE, and sign accuracy do not incorporate transaction costs, turnover, position sizing, or risk-adjusted returns.
+2. **Limited evaluation:** five annual folds and one SPY history do not establish generalization across assets, economic environments, or future data. Hyperparameter tuning was not independently nested inside the walk-forward evaluation.
+3. **Exploratory decomposition:** terminal IMF features may change interpretation as modes mix or their count/order changes across windows. This is not the full HHT amplitude/frequency representation used in the motivating literature.
+4. **Statistical inference limitations:** the reported HAC comparisons are approximate, depend on bandwidth and loss assumptions, and are especially delicate for nested forecasting models. Nonsignificance does not prove equivalence; the Holm adjustment covers the stated comparison families, not every research decision.
+5. **Seed sensitivity:** six CEEMDAN seeds quantify observed variation in this configuration, not a distributional stability guarantee. The same-seed repeatability check is specific to the tested environment.
+6. **Price source and software:** third-party adjusted prices can be revised; dependency ranges are not a lockfile. Recorded fingerprints provide auditability, but exact future reruns require the same snapshot and compatible software.
 
 ## Repository layout
 
 ```text
-src/experiment.py           download, features, evaluation and plots
-tests/test_experiment.py    seven automated tests including forward-data invariance and fair baseline matching
-.github/workflows/tests.yml GitHub Actions automated testing
-requirements.txt
+src/experiment.py                 Fixed-window forecasting pipeline
+src/walk_forward.py               Expanding-window annual evaluation and --seed
+src/significance.py               HAC loss tests against historical mean
+src/decomposition_significance.py Direct decomposition-vs-base comparisons
+tests/test_experiment.py          Core pipeline tests
+tests/test_walk_forward.py        Walk-forward alignment and seed-control tests
+tests/test_statistical_analysis.py Statistical-analysis tests
+.github/workflows/tests.yml       Continuous-integration test workflow
+docs/RESULTS.md                   Original frozen-data results
+docs/WALK_FORWARD_RESULTS.md      Walk-forward results and audit
+docs/STATISTICAL_RESULTS.md       Statistical tests and limitations
+docs/SEED_STABILITY.md            Six-seed CEEMDAN study
+docs/significance/                HAC sensitivity and paired comparison tables
+figures/                          Performance, significance and seed plots
+requirements.txt                  Python dependencies
 README.md
 ```
 
+**Test status:** 18 tests passed locally on October 13, 2026. The number describes the full test suite, not only `tests/test_experiment.py`.
+
 ## Resume-safe summary
 
-> Built a Python research pipeline to evaluate next-day SPY return forecasting using time-series baselines and trailing-window empirical-mode decomposition; implemented chronological data splitting, leakage checks, automated tests, and RMSE/MAE/directional-accuracy reporting.
+> Developed a Python research pipeline for next-day SPY return forecasting with seven statistical, machine-learning, and trailing-window EMD/CEEMDAN configurations; evaluated 1,197 aligned out-of-sample predictions over five annual walk-forward folds, performed HAC paired-loss tests with Holm correction, and audited noise-seed sensitivity and repeatability across six CEEMDAN seeds. Built an automated test suite (18 passing tests). The historical-mean forecast remained the lowest-RMSE overall benchmark in the tested setup.
 
-Use a completed past-tense claim only for activities you have actually performed. Add real market performance numbers **only after running and verifying a downloaded-SPY experiment**.
+Results describe a preliminary, independent research prototype, not a peer-reviewed publication or demonstration of profitable trading.
 
 ## Reproducibility
 
-Suggested environment: Python 3.11. Install dependencies from `requirements.txt`; the ranges are given, not a fully pinned lockfile. The operator-reported October 2026 summary is included in `docs/RESULTS.md`. Commit further market results only after checking metadata and verifying the price snapshot. Never commit raw provider data in violation of terms.
+Use a compatible Python environment and install dependencies from `requirements.txt`; its version ranges are not a fully pinned lockfile. For exact numerical reproduction, use the **same frozen adjusted-close CSV**, settings, and compatible dependency versions. The saved `run_metadata.json` fingerprints, test dates, and predictions support cross-run auditing; the October 2026 dataset is not distributed in the repository.
 
-### v0.2 experiment audit (October 2026)
-
-The first published-style prototype trained the `none` baseline with more early observations than `emd`/`ceemdan`. This version applies the same `--emd-window` warmup across all modes; it also correctly labels `With_EMD` versus `With_CEEMDAN`, plots the actual RMSE-winning model including the historical mean, and records the price dataset fingerprint and covered dates in `run_metadata.json`. The comparison is only meaningful when **the exact same input dataset, date boundaries, and window** are used. For stable comparisons, download SPY data to your own adjusted-close CSV once and rerun all three modes with `--csv`. Different live Yahoo downloads may reflect revised values or different end dates.
-
-The earlier Oct 2026 results supplied by the developer (historical-mean RMSE 0.010872 on 1,196 test observations) were produced by an earlier revision. Do **not** attribute those values to this corrected code until rerunning it.
+The project evolved from an earlier fixed-window baseline to aligned frozen-data experiments, then to annual expanding-window evaluation, statistical comparisons, and seed-stability checks. The earlier fixed-window runs and the more rigorous walk-forward results are documented separately above. Avoid combining metrics from differently downloaded price datasets or describing the approximate significance tests as proof of model equivalence.
