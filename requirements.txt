@@ -5,3 +5,4 @@ matplotlib>=3.7,<4
 yfinance>=0.2.40,<2
 EMD-signal>=1.6,<2
 pytest>=7,<10
+statsmodels>=0.15,<0.16

@@ -39,6 +39,12 @@ We evaluated **seven models** on the same frozen SPY adjusted-price series using
 
 [Read the full walk-forward results and dataset audit](docs/WALK_FORWARD_RESULTS.md).
 
+## Statistical significance and robustness
+
+Paired squared-error comparisons on **1,197 walk-forward predictions** used HAC standard errors with lags 0, 5, 10, and 20 and Holm correction. **None of the six models showed a statistically significant difference from the historical-mean benchmark at the 5% level after correction across the examined bandwidths.** Four direct EMD/CEEMDAN-versus-base-learner comparisons (HAC lag 5) were also nonsignificant after Holm correction. These findings **do not establish model equivalence**.
+
+See [statistical analysis, corrected p-values, and limitations](docs/STATISTICAL_RESULTS.md).
+
 ## Research question
 
 Do features from **trailing-window EMD or CEEMDAN**, computed at each date using *only prices observable on that date*, improve next-day return forecasts over conventional lag, momentum, and realized-volatility features?
