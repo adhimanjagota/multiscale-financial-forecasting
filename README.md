@@ -27,6 +27,18 @@ These results represent a preliminary fixed-window forecasting evaluation, **not
 
 See [full metrics, dataset audit, interpretation, and limitations](docs/RESULTS.md).
 
+## Walk-forward evaluation (2022–October 2026)
+
+We evaluated **seven models** on the same frozen SPY adjusted-price series using expanding-window retraining across five annual test folds. The three runs have matching dataset fingerprints, test targets, and baseline predictions (1,197 aligned out-of-sample dates). **Historical mean achieved the lowest aggregate RMSE (0.010869)**; EMD and CEEMDAN did not improve aggregate RMSE relative to their corresponding ML baselines. These are forecasting results, not trading-performance or statistical-significance claims.
+
+![Walk-forward model RMSE](figures/walk_forward_rmse.png)
+
+![Annual walk-forward RMSE](figures/walk_forward_annual_rmse.png)
+
+![Cumulative loss relative to historical mean](figures/walk_forward_cumulative_loss.png)
+
+[Read the full walk-forward results and dataset audit](docs/WALK_FORWARD_RESULTS.md).
+
 ## Research question
 
 Do features from **trailing-window EMD or CEEMDAN**, computed at each date using *only prices observable on that date*, improve next-day return forecasts over conventional lag, momentum, and realized-volatility features?
