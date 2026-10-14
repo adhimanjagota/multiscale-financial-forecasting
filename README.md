@@ -134,41 +134,52 @@ CEEMDAN is considerably slower than the other runs. The local CSV should use the
 
 ### Limitations and future work
 
-1. **No verified trading edge:** forecast RMSE, MAE, and sign accuracy do not incorporate transaction costs, turnover, position sizing, or risk-adjusted returns.
-2. **Limited evaluation:** five annual folds and one SPY history do not establish generalization across assets, economic environments, or future data. Hyperparameter tuning was not independently nested inside the walk-forward evaluation.
-3. **Exploratory decomposition:** terminal IMF features may change interpretation as modes mix or their count/order changes across windows. This is not the full HHT amplitude/frequency representation used in the motivating literature.
-4. **Statistical inference limitations:** the reported HAC comparisons are approximate, depend on bandwidth and loss assumptions, and are especially delicate for nested forecasting models. Nonsignificance does not prove equivalence; the Holm adjustment covers the stated comparison families, not every research decision.
-5. **Seed sensitivity:** six CEEMDAN seeds quantify observed variation in this configuration, not a distributional stability guarantee. The same-seed repeatability check is specific to the tested environment.
-6. **Price source and software:** third-party adjusted prices can be revised; dependency ranges are not a lockfile. Recorded fingerprints provide auditability, but exact future reruns require the same snapshot and compatible software.
+**Completed evaluations:** The project includes a controlled fixed-window benchmark, five annual expanding-window walk-forward test folds (2022–2026), paired squared-error comparisons with HAC standard errors, Holm multiple-testing correction, and a six-seed CEEMDAN sensitivity analysis. A repeated seed-11 experiment reproduced the saved predictions exactly.
+
+**Remaining research limitations:**
+
+1. Hyperparameters have not undergone independent nested walk-forward tuning.
+2. The experiment uses one asset (SPY) and one historical period; results may not generalize to other assets or regimes.
+3. Terminal IMF amplitudes are exploratory features. IMF count, frequency interpretation, and mode mixing may vary between rolling windows.
+4. Statistical tests use approximate HAC inference; alternative dependence assumptions and nested-model forecast tests merit further study.
+5. Six CEEMDAN seeds provide descriptive stability evidence, not a complete characterization of stochastic variability.
+6. Directional accuracy is not trading profitability. Transaction costs, market impact, risk, and portfolio performance were not evaluated.
+7. Future work includes more robust multiscale representations, additional assets, independent model tuning, and broader out-of-sample validation.
 
 ## Repository layout
 
 ```text
-src/experiment.py                 Fixed-window forecasting pipeline
-src/walk_forward.py               Expanding-window annual evaluation and --seed
-src/significance.py               HAC loss tests against historical mean
-src/decomposition_significance.py Direct decomposition-vs-base comparisons
-tests/test_experiment.py          Core pipeline tests
-tests/test_walk_forward.py        Walk-forward alignment and seed-control tests
-tests/test_statistical_analysis.py Statistical-analysis tests
-.github/workflows/tests.yml       Continuous-integration test workflow
-docs/RESULTS.md                   Original frozen-data results
-docs/WALK_FORWARD_RESULTS.md      Walk-forward results and audit
-docs/STATISTICAL_RESULTS.md       Statistical tests and limitations
-docs/SEED_STABILITY.md            Six-seed CEEMDAN study
-docs/significance/                HAC sensitivity and paired comparison tables
-figures/                          Performance, significance and seed plots
+src/
+  experiment.py                  Fixed-window forecasting pipeline
+  walk_forward.py                Annual expanding-window evaluation
+  significance.py                HAC comparisons against historical mean
+  decomposition_significance.py  Direct decomposition-versus-baseline tests
+
+tests/
+  test_experiment.py             Forecasting pipeline tests
+  test_walk_forward.py           Walk-forward, alignment, and seed-control tests
+  test_statistical_analysis.py   Statistical-analysis tests
+
+docs/
+  RESULTS.md                     Frozen-data benchmark
+  WALK_FORWARD_RESULTS.md        Walk-forward evaluation
+  STATISTICAL_RESULTS.md         Paired forecast-loss analysis
+  SEED_STABILITY.md              Six-seed CEEMDAN sensitivity audit
+  significance/                  HAC robustness tables
+
+figures/                          Benchmark and research visualizations
+.github/workflows/tests.yml       Automated testing
 requirements.txt                  Python dependencies
-README.md
+README.md                         Project overview
 ```
 
-**Test status:** 18 tests passed locally on October 13, 2026. The number describes the full test suite, not only `tests/test_experiment.py`.
+The repository includes 18 passing automated tests in the verified local environment. Downloaded third-party SPY price data is not committed.
 
 ## Resume-safe summary
 
-> Developed a Python research pipeline for next-day SPY return forecasting with seven statistical, machine-learning, and trailing-window EMD/CEEMDAN configurations; evaluated 1,197 aligned out-of-sample predictions over five annual walk-forward folds, performed HAC paired-loss tests with Holm correction, and audited noise-seed sensitivity and repeatability across six CEEMDAN seeds. Built an automated test suite (18 passing tests). The historical-mean forecast remained the lowest-RMSE overall benchmark in the tested setup.
+> Developed an independent Python quantitative research pipeline evaluating next-day SPY return forecasts using Ridge regression, gradient boosting, and rolling EMD/CEEMDAN features. Implemented leakage-conscious feature construction, five annual expanding-window walk-forward folds (1,197 out-of-sample predictions per model), HAC forecast-loss comparisons with Holm correction, and a six-seed CEEMDAN stability analysis. Validated the pipeline with 18 automated tests.
 
-Results describe a preliminary, independent research prototype, not a peer-reviewed publication or demonstration of profitable trading.
+The historical-mean benchmark achieved the lowest aggregate walk-forward RMSE (approximately 0.010869). The decomposition features did not demonstrate a consistent forecasting advantage. No trading-profitability claims are made.
 
 ## Reproducibility
 
